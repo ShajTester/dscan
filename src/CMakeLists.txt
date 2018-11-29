@@ -10,7 +10,23 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   COMPILE_OPTIONS -Wpedantic -Wall -Wextra
 )
 
+IF(DEFINED CMAKE_BUILD_TYPE)
+	message("trace 1")
+	if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
+		message("trace 2")
+		target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=0)
+		target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_TRACE_ON=1)
+		target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_DEBUG_ON=1)
+	endif(${CMAKE_BUILD_TYPE} STREQUAL Debug)
+else()
+	message("trace 3")
+	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=0)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_TRACE_ON=1)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_DEBUG_ON=1)
+endif(DEFINED CMAKE_BUILD_TYPE)
 
+message("trace 4")
+message("~${CMAKE_BUILD_TYPE}~")
 
 #include_directories($ENV{SINC})
 

@@ -2,13 +2,23 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 
 
 #include "args.hxx"
 #include "version.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "log.h"
+
+std::shared_ptr<spdlog::logger> my_logger;
 
 int main(int argc, char const *argv[])
 {
+
+	my_logger = spdlog::stdout_color_st("console");
+	my_logger->set_level(spdlog::level::trace);
+	my_logger->trace(" -=- Start");
 
 	// Примеры разбора командной строки
 	// https://taywee.github.io/args/
@@ -48,9 +58,16 @@ int main(int argc, char const *argv[])
     }
 
     if(conf)
-    {
-    	std::cout << "Config file name: " << args::get(conf) << std::endl;
+    { // Загружаем конфигурацию из файла
+    	SPDLOG_LOGGER_DEBUG(my_logger, "main   Config file name: {}", args::get(conf));
     }
+    else
+	{ // Используем конфигурацию по умолчанию
+	}
+
+	SPDLOG_LOGGER_INFO(my_logger, "main   end");
+
+	std::cout << "END of programm" << std::endl;
 
     return 0;
 }
