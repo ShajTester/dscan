@@ -2,9 +2,6 @@
 
 set (SRC main.cpp)
 
-configure_file("${PROJECT_SOURCE_DIR}/src/version.h.in" "${PROJECT_BINARY_DIR}/version.h")
-include_directories("${PROJECT_BINARY_DIR}")
-
 add_executable(${PROJECT_NAME} ${SRC})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
