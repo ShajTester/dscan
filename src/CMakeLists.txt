@@ -1,6 +1,6 @@
 
 
-set (SRC main.cpp i2c.cpp)
+set (SRC main.cpp i2c_class.cpp)
 
 add_executable(${PROJECT_NAME} ${SRC})
 

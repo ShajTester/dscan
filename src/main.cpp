@@ -4,13 +4,14 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <list>
 
 #include "args.hxx"
 #include "version.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "log.h"
-#include "i2c.h"
+#include "i2c_class.hpp"
 
 std::shared_ptr<spdlog::logger> my_logger;
 
@@ -66,11 +67,16 @@ int main(int argc, char const *argv[])
 	{ // Используем конфигурацию по умолчанию
 	}
 
-    auto scan = i2cscanner::create();
-    auto dev = scan->scan(3);
-    for(const auto &it: dev)
+    for(int i=0; i<8; i++)
     {
-        SPDLOG_LOGGER_DEBUG(my_logger, "i2c-3   {0:#04X}", it.addr);
+        std::cout << "\nBus " << i << std::endl;
+        auto scan = i2cscanner::create();
+        auto dev = scan->scan(i);
+        for(const auto &it: dev)
+        {
+            // SPDLOG_LOGGER_DEBUG(my_logger, "i2c-3   {0:#04X} is {1}", it.addr, it.state);
+            std::cout << fmt::format("   {0:#04X} is {1}", it.addr, it.state) << std::endl;
+        }
     }
 
     return 0;
