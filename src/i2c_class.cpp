@@ -185,3 +185,24 @@ std::list<devdata> i2cscanner::scan(int bus_num)
 
 	return d;
 }
+
+
+
+
+std::string devdata::state_str() const
+{
+	switch(state)
+	{
+	case DEV_NON:
+		return std::string("Not scanned address");
+	case DEV_ABSENT:
+		return std::string("Device don't answer");
+	case DEV_PRESENT:
+		return std::string("Device is on the bus");
+	case DEV_BUSY:
+		return std::string("A driver is connected to the device");
+	case DEV_ERROR:
+		return std::string("Error while device scanning");
+	}
+	return std::string("Error state");
+}

@@ -25,7 +25,7 @@ int main(int argc, char const *argv[])
 	// Примеры разбора командной строки
 	// https://taywee.github.io/args/
 
-	args::ArgumentParser parser("R-BD-E5R-V4 i2c devices scanner", "This goes after the options");
+	args::ArgumentParser parser("R-BD-E5R-V4 i2c devices scanner", "Rikor IMT 2018.");
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
     args::Flag ver(parser, "ver", "version ", {'v', "version"});
     args::ValueFlag<std::string> conf(parser, "conf", "Config file name", {'c', "conf"});
@@ -75,7 +75,7 @@ int main(int argc, char const *argv[])
         for(const auto &it: dev)
         {
             // SPDLOG_LOGGER_DEBUG(my_logger, "i2c-3   {0:#04X} is {1}", it.addr, it.state);
-            std::cout << fmt::format("   {0:#04X} is {1}", it.addr, it.state) << std::endl;
+            std::cout << fmt::format("   {0:#04x} :  {1}", it.addr, it.state_str()) << std::endl;
         }
     }
 

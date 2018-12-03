@@ -1,5 +1,9 @@
 *.sublime-workspace
 
+build/**
+oe-logs
+oe-workdir
+
 CMakeCache.txt
 CMakeFiles
 CMakeScripts

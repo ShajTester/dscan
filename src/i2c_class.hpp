@@ -20,6 +20,7 @@ struct devdata
 	unsigned char state;
 
 	devdata(unsigned char a, unsigned char s): addr(a), state(s) {}
+	std::string state_str() const;
 };
 
 

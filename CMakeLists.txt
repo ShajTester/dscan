@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 
-set(PROJECT_VERSION_PATCH 1)
-
-project(dscan VERSION 0.0.${PROJECT_VERSION_PATCH})
+project(dscan VERSION 0.1.3)
 
 #find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
