@@ -101,7 +101,7 @@ static int i2c_dev_open(int i2cbus)
 			fd = open(filename, O_RDWR);
 		} else {
 			// bb_perror_msg_and_die("can't open '%s'", filename);
-	        SPDLOG_LOGGER_CRITICAL(my_logger, "can't open '%s'", filename);
+	        SPDLOG_LOGGER_CRITICAL(my_logger, "can't open '{}'", filename);
 		}
 	}
 
