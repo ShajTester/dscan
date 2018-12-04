@@ -22,6 +22,7 @@ add_subdirectory(src)
 # include (CPack)
 
 configure_file("${PROJECT_SOURCE_DIR}/src/version.h.in" "${PROJECT_BINARY_DIR}/version.h")
+configure_file("${PROJECT_SOURCE_DIR}/src/dscan.conf.json" "${PROJECT_BINARY_DIR}/dscan.conf" COPYONLY)
 
 enable_testing()
 

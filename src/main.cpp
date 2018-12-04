@@ -6,15 +6,39 @@
 #include <vector>
 #include <list>
 
+#include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "args.hxx"
 #include "version.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
-#include "log.h"
-#include "i2c_class.hpp"
 #include "rapidjson/prettywriter.h"
 
+#include "log.h"
+#include "i2c_class.hpp"
+#include "prjconfig.hpp"
+
 std::shared_ptr<spdlog::logger> my_logger;
+
+
+// Отсюда
+// https://stackoverflow.com/a/12774387
+inline bool is_file_exists(const std::string &name) 
+{
+	struct stat buffer;   
+	return (stat (name.c_str(), &buffer) == 0); 
+}
+
+std::string GetCurrentWorkingDir(void) 
+{
+	char buff[FILENAME_MAX];
+	getcwd(buff, FILENAME_MAX);
+	std::string current_working_dir(buff);
+	return current_working_dir;
+}
+
 
 int main(int argc, char const *argv[])
 {
@@ -63,19 +87,59 @@ int main(int argc, char const *argv[])
 		return 0;
 	}
 
+
+	std::string configFileName;
+
 	if(conf)
 	{ // Загружаем конфигурацию из файла
 		SPDLOG_LOGGER_DEBUG(my_logger, "main   Config file name: {}", args::get(conf));
+		configFileName = args::get(conf);
+		if(!is_file_exists(configFileName))
+		{
+			std::cerr << "\nNot found config file\n" << std::endl;
+			return 1;
+		}
 	}
 	else
 	{ // Используем конфигурацию по умолчанию
+		configFileName = "/etc/dscan/dscan.conf";
+		if(!is_file_exists(configFileName))
+		{
+			configFileName = GetCurrentWorkingDir();
+			configFileName.append("/dscan.conf");
+			if(!is_file_exists(configFileName))
+			{
+				std::cerr << fmt::format("\nNot found config file: {}\n", configFileName) << std::endl;
+				return 1;
+			}
+		}
 	}
+
+
+	SPDLOG_LOGGER_DEBUG(my_logger, "Config file name: {}", configFileName);
+	auto config_doc = rikor::prjConfig::create(configFileName);
+
+	SPDLOG_LOGGER_DEBUG(my_logger, "Bus count {}", config_doc->getDoc().GetArray().Size());
+
+	// auto brd = rikor::board::create(config_doc);
+	// brd->set_ostream(std::cout);
+	// brd->set_format(rikor::board::json_f);
+	// brd->set_scantype(rikor::board::scan_all);
+	// brd->scan();
+	// brd->print_report();
+
+
+
+
+
+
+
 
 	// Вывод в json
 	// https://github.com/Tencent/rapidjson/blob/master/example/serialize/serialize.cpp
 
 	rapidjson::StringBuffer sb;
-	
+
 	std::unique_ptr<rapidjson::Writer<rapidjson::StringBuffer>> writer;
 	// rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
 	if(json1) 
@@ -88,8 +152,8 @@ int main(int argc, char const *argv[])
 	{
 		SPDLOG_LOGGER_DEBUG(my_logger, "rapidjson::PrettyWriter");
 		writer = std::make_unique<rapidjson::PrettyWriter<rapidjson::StringBuffer>>(sb);
-		auto p = std::reinterpret_cast<std::unique_ptr<rapidjson::PrettyWriter<rapidjson::StringBuffer> > >(writer);
-		p->SetFormatOptions(rapidjson::kFormatDefault);
+		// auto p = std::reinterpret_cast<std::unique_ptr<rapidjson::PrettyWriter<rapidjson::StringBuffer> > >(writer);
+		// p->SetFormatOptions(rapidjson::kFormatDefault);
 	}
 	writer->StartArray();
 
@@ -101,7 +165,7 @@ int main(int argc, char const *argv[])
 		for(const auto &it: dev)
 		{
 			// SPDLOG_LOGGER_DEBUG(my_logger, "i2c-3   {0:#04X} is {1}", it.addr, it.state);
-			std::cout << fmt::format("   {0:#04x} :  {1}", it.addr, it.state_str()) << std::endl;
+			// std::cout << fmt::format("   {0:#04x} :  {1}", it.addr, it.state_str()) << std::endl;
 			it.Serialize(*writer);
 		}
 	}
