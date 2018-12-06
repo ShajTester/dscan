@@ -97,12 +97,16 @@ static int i2c_dev_open(int i2cbus)
 
 	sprintf(filename, "/dev/i2c-%d", i2cbus);
 	fd = open(filename, O_RDWR);
-	if (fd < 0) {
-		if (errno == ENOENT) {
+	if (fd < 0) 
+	{
+		if (errno == ENOENT) 
+		{
 			filename[8] = '/'; /* change to "/dev/i2c/%d" */
 			// fd = xopen(filename, O_RDWR);
 			fd = open(filename, O_RDWR);
-		} else {
+		} 
+		else 
+		{
 			// bb_perror_msg_and_die("can't open '%s'", filename);
 	        SPDLOG_LOGGER_CRITICAL(my_logger, "can't open '{}'", filename);
 		}
@@ -169,42 +173,85 @@ std::list<devdata> i2cscanner::scan(int bus_num)
 		{
 			if (errno == EBUSY) 
 			{
-				d.emplace_back(static_cast<unsigned char>(i & 0xff), static_cast<unsigned char>(DEV_BUSY));
+				// d.emplace_back(static_cast<unsigned char>(i & 0xff), devstate::DEV_BUSY);
 				continue;
 			}
 			else
 			{ // В i2c_tools в этом месте выход из программы с ошибкой
-				d.emplace_back(i, DEV_ERROR);
+				// d.emplace_back(i, devstate::DEV_ERROR);
 				continue;
 			}
 		}
 		status = i2c_smbus_read_byte(fd);
-		if (status < 0)
-			continue;
-			// d.emplace_back(i, DEV_ABSENT);
-		else
-			d.emplace_back(i, DEV_PRESENT);
+		// if (status < 0)
+		// 	continue;
+		// 	// d.emplace_back(i, DEV_ABSENT);
+		// else
+		// 	// d.emplace_back(i, devstate::DEV_PRESENT);
 	}
+
+	close(fd);
 
 	return d;
 }
 
 
+void i2cscanner::scan(std::list<devdata> &devices)
+{
+	int current_bus = -1;
+	int status;
+	int fd = -1;
+	unsigned long funcs;
+
+	for(auto &dev: devices)
+	{
+		if(dev.bus != current_bus)
+		{
+			current_bus = dev.bus;
+			if(fd) close(fd);
+			fd = i2c_dev_open(current_bus);
+			if(fd < 0)
+				throw "Can't open bus";
+		}
+
+		status = ioctl(fd, I2C_SLAVE, itoptr(dev.addr));
+		if (status < 0) 
+		{
+			if (errno == EBUSY) 
+			{
+				dev.state = devstate::DEV_BUSY;
+				continue;
+			}
+			else
+			{ // В i2c_tools в этом месте выход из программы с ошибкой
+				dev.state = devstate::DEV_ERROR;
+				continue;
+			}
+		}
+		status = i2c_smbus_read_byte(fd);
+		if (status < 0)
+			dev.state = devstate::DEV_ABSENT;
+		else
+			dev.state = devstate::DEV_PRESENT;
+
+	}
+	if(fd) close(fd);
+}
 
 
 std::string devdata::state_str() const
 {
 	switch(state)
 	{
-	case DEV_NON:
+	case devstate::DEV_NON:
 		return std::string("Not scanned address");
-	case DEV_ABSENT:
+	case devstate::DEV_ABSENT:
 		return std::string("Device don't answer");
-	case DEV_PRESENT:
+	case devstate::DEV_PRESENT:
 		return std::string("Device is on the bus");
-	case DEV_BUSY:
+	case devstate::DEV_BUSY:
 		return std::string("A driver is connected to the device");
-	case DEV_ERROR:
+	case devstate::DEV_ERROR:
 		return std::string("Error while device scanning");
 	}
 	return std::string("Error state");

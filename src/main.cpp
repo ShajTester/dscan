@@ -14,10 +14,8 @@
 #include "version.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
-#include "rapidjson/prettywriter.h"
 
 #include "log.h"
-#include "i2c_class.hpp"
 #include "prjconfig.hpp"
 #include "board.hpp"
 
@@ -36,8 +34,7 @@ std::string GetCurrentWorkingDir(void)
 {
 	char buff[FILENAME_MAX];
 	getcwd(buff, FILENAME_MAX);
-	std::string current_working_dir(buff);
-	return current_working_dir;
+	return std::string(buff);
 }
 
 
@@ -56,8 +53,9 @@ int main(int argc, char const *argv[])
 	args::Flag ver(parser, "ver", "version ", {'v', "version"});
 	args::ValueFlag<std::string> conf(parser, "conf", "Config file name", {'c', "conf"});
     args::Group jsongroup(parser, "This group is all exclusive:", args::Group::Validators::AtMostOne);
-	args::Flag json(jsongroup, "json", "json ", {"json"});
+	args::Flag json(jsongroup, "json", "json in human readable format", {"json"});
 	args::Flag json1(jsongroup, "json1", "json single line format", {"json1"});
+	args::Flag outtext(jsongroup, "text", "plain text format (default)", {"text"});
     args::Group scangroup(parser, "This group is all exclusive:", args::Group::Validators::AtMostOne);
 	args::Flag fullscan(scangroup, "fullscan", "scan all devices in all busses", {"full"});
 	args::Flag knownscan(scangroup, "knownscan", "scan only known devices (default)", {"known"});
@@ -120,13 +118,17 @@ int main(int argc, char const *argv[])
 	}
 
 
-	SPDLOG_LOGGER_DEBUG(my_logger, "Config file name: {}", configFileName);
+	SPDLOG_LOGGER_INFO(my_logger, "Config file name: {}", configFileName);
 	auto config_doc = rikor::prjConfig::create(configFileName);
-
-	SPDLOG_LOGGER_DEBUG(my_logger, "Bus count {}", config_doc->getDoc().GetArray().Size());
-
 	auto brd = rikor::board::create(config_doc);
-	brd->set_format(rikor::ReportFormat::rep_json_indent);
+
+	if(json)
+		brd->set_format(rikor::ReportFormat::rep_json_indent);
+	else if(json1)
+		brd->set_format(rikor::ReportFormat::rep_json_compact);
+	else
+		brd->set_format(rikor::ReportFormat::rep_plain);
+
 	if(fullscan)
 		brd->set_scantype(rikor::ScanType::scan_all);
 	else
@@ -134,57 +136,8 @@ int main(int argc, char const *argv[])
 
 	brd->scan();
 
-	brd->print_report(std::cout);
+	// brd->print_report(std::cout);
 	std::cout << "\n" << *brd << std::endl;
-
-
-
-
-
-
-
-
-	// Вывод в json
-	// https://github.com/Tencent/rapidjson/blob/master/example/serialize/serialize.cpp
-
-	// rapidjson::StringBuffer sb;
-
-	// std::unique_ptr<rapidjson::Writer<rapidjson::StringBuffer>> writer;
-	// // rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
-	// if(json1) 
-	// {
-	// 	SPDLOG_LOGGER_DEBUG(my_logger, "rapidjson::Writer");
-	// 	writer = std::make_unique<rapidjson::Writer<rapidjson::StringBuffer>>(sb);
-	// 	// writer.SetFormatOptions(rapidjson::kFormatSingleLineArray);
-	// }
-	// else
-	// {
-	// 	SPDLOG_LOGGER_DEBUG(my_logger, "rapidjson::PrettyWriter");
-	// 	writer = std::make_unique<rapidjson::PrettyWriter<rapidjson::StringBuffer>>(sb);
-	// 	// auto p = std::reinterpret_cast<std::unique_ptr<rapidjson::PrettyWriter<rapidjson::StringBuffer> > >(writer);
-	// 	// p->SetFormatOptions(rapidjson::kFormatDefault);
-	// }
-	// writer->StartArray();
-
-	// auto scan = rikor::i2cscanner::create();
-	// for(int i=0; i<8; i++)
-	// {
-	// 	std::cout << "\nBus " << i << std::endl;
-	// 	auto dev = scan->scan(i);
-	// 	for(const auto &it: dev)
-	// 	{
-	// 		// SPDLOG_LOGGER_DEBUG(my_logger, "i2c-3   {0:#04X} is {1}", it.addr, it.state);
-	// 		// std::cout << fmt::format("   {0:#04x} :  {1}", it.addr, it.state_str()) << std::endl;
-	// 		it.Serialize(*writer);
-	// 	}
-	// }
-
-	// writer->EndArray();
-
-	// if(json || json1)
-	// {
-	// 	std::cout << "\n\n\n" << sb.GetString() << std::endl;
-	// }
 
 	// Release and close all loggers
 	spdlog::drop_all();

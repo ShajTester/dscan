@@ -4,32 +4,40 @@
 #include <vector>
 #include <list>
 #include <string>
-#include "rapidjson/prettywriter.h"
+
+#include "log.h"
 
 
 namespace rikor
 {
 
-enum devstate
+enum class devstate
 {
-	DEV_NON = 0,
-	DEV_ABSENT = 1,
-	DEV_PRESENT,
-	DEV_BUSY,
+	DEV_NON = 0,       // Не сканировалось
+	DEV_ABSENT = 1,    // Не ответил на запросы
+	DEV_PRESENT,       // Ответил на запросы / Присутствует в конфигурации
+	DEV_BUSY,          // К этому адресу подключен драйвер
 	DEV_ERROR
+};
+
+enum class confstate
+{
+	empty,             // Устройства нет в конфигурации
+	conf,              // Устройство есть в конфигурации
+	conf_driver        // Устройство есть в конфигурации, к нему подключен драйвер
 };
 
 class devdata
 {
 public:
-	unsigned char bus;
-	unsigned char addr;
-	unsigned char state;
-	std::string name;
-	std::string descr;
+	int bus;              // Номер шины
+	int addr;             // Адрес устройства на шине
+	devstate state;       // Состояние сканирования
+	confstate cfgst;      // Состояние устройства в конфигурации
+	std::string name;     // Короткое описание устройства
+	std::string descr;    // Развернутое описание устройства
 
 	devdata(){}
-	devdata(unsigned char a, unsigned char s): addr(a), state(s) {}
 	std::string state_str() const;
 
 	// Отсюда
@@ -39,11 +47,18 @@ public:
 	{
 		writer.StartObject();
 		writer.String("bus");
-		writer.Uint(3);
+		writer.Uint(bus);
 		writer.String("addr");
-		writer.Uint(addr);
+		writer.String(fmt::format("{0:#04x}", addr).c_str());
+		writer.String("name");
+		writer.String(name.c_str());
+		writer.String("descr");
+		writer.String(descr.c_str());
 		writer.String("state");
-		writer.Uint(state);
+		writer.Uint(static_cast<int>(state) + static_cast<int>(cfgst) * 100);
+		// int a = state;
+		// int b = cfgst;
+		// writer.Uint(a + b * 100);
 		writer.String("state_descr");
 		writer.String(state_str().c_str());
 		writer.EndObject();
@@ -65,7 +80,7 @@ public:
 	static std::shared_ptr<i2cscanner> create();
 
 	std::list<devdata> scan(int bus_num);
-
+	void scan(std::list<devdata> &devices);
 };
 
 } // namespace rikor

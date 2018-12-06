@@ -45,7 +45,7 @@ public:
 	void set_scantype(const ScanType st);
 
 	void scan();
-	void print_report(std::ostream &os);
+	void print_report(std::ostream &os) const;
 	// friend std::ostream& std::operator<<(std::ostream& os, const board& b);
 
 

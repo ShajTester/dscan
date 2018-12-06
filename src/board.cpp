@@ -8,9 +8,11 @@
 #include <iterator>
 
 #include "rapidjson/document.h"  
+#include "rapidjson/prettywriter.h"
 
 #include "log.h"
 #include "board.hpp"
+#include "i2c_class.hpp"
 
 
 namespace rikor
@@ -64,6 +66,7 @@ void board::set_scantype(const ScanType st)
 void board::scan()
 {
 	devdata new_device;
+	new_device.state = devstate::DEV_NON;
 	// if(config)
 	// {
 		const auto &cfg = config.lock()->getDoc();   // Если что-то не сложилось, здесь получаем исключения...
@@ -78,7 +81,7 @@ void board::scan()
 				if(bus.HasMember("bus")) 
 				{
 					new_device.bus = bus["bus"].GetInt();
-					SPDLOG_LOGGER_DEBUG(my_logger, "Found bus #{}", new_device.bus);
+					new_device.cfgst = confstate::conf;
 					addr_set.clear();
 
 					if(bus.HasMember("devices"))
@@ -115,6 +118,7 @@ void board::scan()
 					else
 						last_addr = 0x77;
 
+					new_device.cfgst = confstate::empty;
 					new_device.name = "Unknown";
 					new_device.descr = "Unknown device";
 
@@ -137,8 +141,7 @@ void board::scan()
 				if(bus.HasMember("bus")) 
 				{
 					new_device.bus = bus["bus"].GetInt();
-					SPDLOG_LOGGER_DEBUG(my_logger, "Found bus #{}", new_device.bus);
-
+					new_device.cfgst = confstate::conf;
 					if(bus.HasMember("devices"))
 					{
 						for(const auto &dev: bus["devices"].GetArray())
@@ -186,13 +189,14 @@ void board::scan()
 	if(devices.size() != devsize)
 		SPDLOG_LOGGER_ERROR(my_logger, "There were several nodes with the same address in the configuration");
 
+	auto scanner = rikor::i2cscanner::create();
+	scanner->scan(devices);
 
-	SPDLOG_LOGGER_DEBUG(my_logger, "Scan complete");
-	SPDLOG_LOGGER_DEBUG(my_logger, "   Devices scaned {}", devices.size());
 	for(const auto &it: devices)
 	{
-		SPDLOG_LOGGER_DEBUG(my_logger, "{0}-{1:04x}  -  {2}",
-			it.bus, it.addr, it.name);
+		if(it.state == devstate::DEV_BUSY)
+		{ // Здесь нужно через драйвер проверить, что устройство отвечает
+		}
 	}
 
 
@@ -200,9 +204,66 @@ void board::scan()
 
 
 
-void board::print_report(std::ostream &os)
+void board::print_report(std::ostream &os) const
 {
-	os << *this;
+	// Вывод в json
+	// https://github.com/Tencent/rapidjson/blob/master/example/serialize/serialize.cpp
+
+
+	if(rep_format == ReportFormat::rep_json_compact) 
+	{
+		rapidjson::StringBuffer sb;
+		rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+		writer.StartArray();
+
+		for(const auto &it: devices)
+		{
+			if(!((it.state == devstate::DEV_ABSENT) && (it.cfgst == confstate::empty)))
+			{
+				it.Serialize(writer);
+			}
+		}
+
+		writer.EndArray();
+		os << sb.GetString() << std::flush;
+	}
+	else if(rep_format == ReportFormat::rep_json_indent)
+	{
+		rapidjson::StringBuffer sb;
+		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
+		writer.StartArray();
+
+		for(const auto &it: devices)
+		{
+			if(!((it.state == devstate::DEV_ABSENT) && (it.cfgst == confstate::empty)))
+			{
+				it.Serialize(writer);
+			}
+		}
+
+		writer.EndArray();
+		os << sb.GetString() << std::flush;
+	}
+	else
+	{
+		os << "Plain text writer\n\n";
+		int tbus = -1;
+		for(const auto &it: devices)
+		{
+			if(it.bus != tbus)
+			{
+				tbus = it.bus;
+				os << fmt::format("Bus {}\n", it.bus);
+			}
+			if(!((it.state == devstate::DEV_ABSENT) && (it.cfgst == confstate::empty)))
+			{
+				os << fmt::format("   {0}-{1:#04x} :  {2}\n", it.bus, it.addr, it.state_str());
+			}
+		}
+		os << std::flush;
+	}
+
+	return;
 }
 
 
@@ -211,7 +272,8 @@ void board::print_report(std::ostream &os)
 
 std::ostream & std::operator<<(std::ostream &os, const rikor::board &b)  
 {  
-    os << "This is a test report" << std::flush;
+
+	b.print_report(os);
     return os;  
 } 
 
