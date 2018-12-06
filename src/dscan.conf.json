@@ -5,7 +5,7 @@
         "last": "0x77"
     },
     {
-        "bus": 1,
+        "bAs": 1,
         "first": "0x03",
         "last": "0x77"
     },
@@ -20,12 +20,16 @@
         "last": "0x77",
         "devices": [
             {
+                "addr": "0x10",
+                "descr": "test device"
+            },
+            {
                 "addr": "0x50",
-                "name": "fru"
+                "name": "fru2"
             },
             {
                 "addr": "0x52",
-                "name": "fru"
+                "name": "fru1"
             },
             {
                 "addr": "0x68",

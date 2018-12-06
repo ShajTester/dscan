@@ -19,6 +19,7 @@
 #include "log.h"
 #include "i2c_class.hpp"
 #include "prjconfig.hpp"
+#include "board.hpp"
 
 std::shared_ptr<spdlog::logger> my_logger;
 
@@ -56,7 +57,10 @@ int main(int argc, char const *argv[])
 	args::ValueFlag<std::string> conf(parser, "conf", "Config file name", {'c', "conf"});
     args::Group jsongroup(parser, "This group is all exclusive:", args::Group::Validators::AtMostOne);
 	args::Flag json(jsongroup, "json", "json ", {"json"});
-	args::Flag json1(jsongroup, "json1", "json single line format ", {"json1"});
+	args::Flag json1(jsongroup, "json1", "json single line format", {"json1"});
+    args::Group scangroup(parser, "This group is all exclusive:", args::Group::Validators::AtMostOne);
+	args::Flag fullscan(scangroup, "fullscan", "scan all devices in all busses", {"full"});
+	args::Flag knownscan(scangroup, "knownscan", "scan only known devices (default)", {"known"});
 
 	try
 	{
@@ -121,12 +125,17 @@ int main(int argc, char const *argv[])
 
 	SPDLOG_LOGGER_DEBUG(my_logger, "Bus count {}", config_doc->getDoc().GetArray().Size());
 
-	// auto brd = rikor::board::create(config_doc);
-	// brd->set_ostream(std::cout);
-	// brd->set_format(rikor::board::json_f);
-	// brd->set_scantype(rikor::board::scan_all);
-	// brd->scan();
-	// brd->print_report();
+	auto brd = rikor::board::create(config_doc);
+	brd->set_format(rikor::ReportFormat::rep_json_indent);
+	if(fullscan)
+		brd->set_scantype(rikor::ScanType::scan_all);
+	else
+		brd->set_scantype(rikor::ScanType::scan_known);
+
+	brd->scan();
+
+	brd->print_report(std::cout);
+	std::cout << "\n" << *brd << std::endl;
 
 
 
@@ -138,44 +147,44 @@ int main(int argc, char const *argv[])
 	// Вывод в json
 	// https://github.com/Tencent/rapidjson/blob/master/example/serialize/serialize.cpp
 
-	rapidjson::StringBuffer sb;
+	// rapidjson::StringBuffer sb;
 
-	std::unique_ptr<rapidjson::Writer<rapidjson::StringBuffer>> writer;
-	// rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
-	if(json1) 
-	{
-		SPDLOG_LOGGER_DEBUG(my_logger, "rapidjson::Writer");
-		writer = std::make_unique<rapidjson::Writer<rapidjson::StringBuffer>>(sb);
-		// writer.SetFormatOptions(rapidjson::kFormatSingleLineArray);
-	}
-	else
-	{
-		SPDLOG_LOGGER_DEBUG(my_logger, "rapidjson::PrettyWriter");
-		writer = std::make_unique<rapidjson::PrettyWriter<rapidjson::StringBuffer>>(sb);
-		// auto p = std::reinterpret_cast<std::unique_ptr<rapidjson::PrettyWriter<rapidjson::StringBuffer> > >(writer);
-		// p->SetFormatOptions(rapidjson::kFormatDefault);
-	}
-	writer->StartArray();
+	// std::unique_ptr<rapidjson::Writer<rapidjson::StringBuffer>> writer;
+	// // rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
+	// if(json1) 
+	// {
+	// 	SPDLOG_LOGGER_DEBUG(my_logger, "rapidjson::Writer");
+	// 	writer = std::make_unique<rapidjson::Writer<rapidjson::StringBuffer>>(sb);
+	// 	// writer.SetFormatOptions(rapidjson::kFormatSingleLineArray);
+	// }
+	// else
+	// {
+	// 	SPDLOG_LOGGER_DEBUG(my_logger, "rapidjson::PrettyWriter");
+	// 	writer = std::make_unique<rapidjson::PrettyWriter<rapidjson::StringBuffer>>(sb);
+	// 	// auto p = std::reinterpret_cast<std::unique_ptr<rapidjson::PrettyWriter<rapidjson::StringBuffer> > >(writer);
+	// 	// p->SetFormatOptions(rapidjson::kFormatDefault);
+	// }
+	// writer->StartArray();
 
-	auto scan = i2cscanner::create();
-	for(int i=0; i<8; i++)
-	{
-		std::cout << "\nBus " << i << std::endl;
-		auto dev = scan->scan(i);
-		for(const auto &it: dev)
-		{
-			// SPDLOG_LOGGER_DEBUG(my_logger, "i2c-3   {0:#04X} is {1}", it.addr, it.state);
-			// std::cout << fmt::format("   {0:#04x} :  {1}", it.addr, it.state_str()) << std::endl;
-			it.Serialize(*writer);
-		}
-	}
+	// auto scan = rikor::i2cscanner::create();
+	// for(int i=0; i<8; i++)
+	// {
+	// 	std::cout << "\nBus " << i << std::endl;
+	// 	auto dev = scan->scan(i);
+	// 	for(const auto &it: dev)
+	// 	{
+	// 		// SPDLOG_LOGGER_DEBUG(my_logger, "i2c-3   {0:#04X} is {1}", it.addr, it.state);
+	// 		// std::cout << fmt::format("   {0:#04x} :  {1}", it.addr, it.state_str()) << std::endl;
+	// 		it.Serialize(*writer);
+	// 	}
+	// }
 
-	writer->EndArray();
+	// writer->EndArray();
 
-	if(json || json1)
-	{
-		std::cout << "\n\n\n" << sb.GetString() << std::endl;
-	}
+	// if(json || json1)
+	// {
+	// 	std::cout << "\n\n\n" << sb.GetString() << std::endl;
+	// }
 
 	// Release and close all loggers
 	spdlog::drop_all();

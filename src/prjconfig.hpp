@@ -27,7 +27,7 @@ public:
 
 	~prjConfig();
 
-	const rapidjson::Document &getDoc() const;
+	const rapidjson::Document &getDoc();
 };
 
 

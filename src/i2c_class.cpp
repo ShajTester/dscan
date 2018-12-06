@@ -12,6 +12,9 @@
 #include "i2c_class.hpp"
 
 
+namespace rikor
+{
+
 #if __GNUC_PREREQ(3,0) && !defined(__NO_INLINE__)
 # define ALWAYS_INLINE __attribute__ ((always_inline)) inline
 /* I've seen a toolchain where I needed __noinline__ instead of noinline */
@@ -206,3 +209,7 @@ std::string devdata::state_str() const
 	}
 	return std::string("Error state");
 }
+
+
+} // namespace rikor
+

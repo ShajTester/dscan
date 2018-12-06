@@ -55,7 +55,7 @@ prjConfig::~prjConfig()
 	// Note: At this point, d may have dangling pointers pointed to the deallocated buffer.
 }
 
-const rapidjson::Document &prjConfig::getDoc() const
+const rapidjson::Document &prjConfig::getDoc()
 {
 	return d;
 }

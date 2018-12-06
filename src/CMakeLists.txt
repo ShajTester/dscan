@@ -1,6 +1,6 @@
 
 
-set (SRC main.cpp i2c_class.cpp prjconfig.cpp)
+set (SRC main.cpp i2c_class.cpp prjconfig.cpp board.cpp)
 
 add_executable(${PROJECT_NAME} ${SRC})
 
@@ -10,20 +10,30 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   COMPILE_OPTIONS -Wpedantic -Wall -Wextra
 )
 
+
+# define SPDLOG_LEVEL_TRACE		0
+# define SPDLOG_LEVEL_DEBUG		1
+# define SPDLOG_LEVEL_INFO		2
+# define SPDLOG_LEVEL_WARN		3
+# define SPDLOG_LEVEL_ERROR		4
+# define SPDLOG_LEVEL_CRITICAL	5
+# define SPDLOG_LEVEL_OFF		6
+
+
 message("~${CMAKE_BUILD_TYPE}~")
 if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL ""))
-	message("trace 2")
+	# message("trace 2")
 	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=0)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_TRACE_ON=1)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_DEBUG_ON=1)
 else((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL ""))
-	message("trace 3")
-	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=100)
+	# message("trace 3")
+	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=5)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_TRACE_ON=1)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_DEBUG_ON=1)
 endif((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL ""))
 
-message("trace 4")
+# message("trace 4")
 
 #include_directories($ENV{SINC})
 

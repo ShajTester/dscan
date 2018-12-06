@@ -3,8 +3,12 @@
 #include <memory>
 #include <vector>
 #include <list>
+#include <string>
 #include "rapidjson/prettywriter.h"
 
+
+namespace rikor
+{
 
 enum devstate
 {
@@ -18,9 +22,13 @@ enum devstate
 class devdata
 {
 public:
+	unsigned char bus;
 	unsigned char addr;
 	unsigned char state;
+	std::string name;
+	std::string descr;
 
+	devdata(){}
 	devdata(unsigned char a, unsigned char s): addr(a), state(s) {}
 	std::string state_str() const;
 
@@ -59,4 +67,6 @@ public:
 	std::list<devdata> scan(int bus_num);
 
 };
+
+} // namespace rikor
 
