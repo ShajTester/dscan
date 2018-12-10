@@ -24,7 +24,7 @@ enum class confstate
 {
 	empty,             // Устройства нет в конфигурации
 	conf,              // Устройство есть в конфигурации
-	conf_driver        // Устройство есть в конфигурации, к нему подключен драйвер
+	conf_driver        // (? не используется ?) Устройство есть в конфигурации, к нему подключен драйвер
 };
 
 class devdata
@@ -39,6 +39,7 @@ public:
 
 	devdata(){}
 	std::string state_str() const;
+	int state_code() const;
 
 	// Отсюда
 	// https://github.com/Tencent/rapidjson/blob/30d92a6399b6077006d976b1dc05ee13305bf1c4/example/serialize/serialize.cpp#L86
@@ -55,10 +56,7 @@ public:
 		writer.String("descr");
 		writer.String(descr.c_str());
 		writer.String("state");
-		writer.Uint(static_cast<int>(state) + static_cast<int>(cfgst) * 100);
-		// int a = state;
-		// int b = cfgst;
-		// writer.Uint(a + b * 100);
+		writer.Uint(state_code());
 		writer.String("state_descr");
 		writer.String(state_str().c_str());
 		writer.EndObject();

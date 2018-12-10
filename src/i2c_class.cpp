@@ -239,6 +239,12 @@ void i2cscanner::scan(std::list<devdata> &devices)
 }
 
 
+int devdata::state_code() const
+{
+	return static_cast<int>(state) + static_cast<int>(cfgst) * 100;
+}
+
+
 std::string devdata::state_str() const
 {
 	switch(state)
@@ -246,11 +252,20 @@ std::string devdata::state_str() const
 	case devstate::DEV_NON:
 		return std::string("Not scanned address");
 	case devstate::DEV_ABSENT:
-		return std::string("Device don't answer");
+		if(cfgst == confstate::empty)
+			return std::string("Ok. Address if free");
+		else // if(cfgst == confstate::conf)
+			return std::string("Warning! Device don't answer");
 	case devstate::DEV_PRESENT:
-		return std::string("Device is on the bus");
+		if(cfgst == confstate::empty)
+			return std::string("New device found");
+		else // if(cfgst == confstate::conf)
+			return std::string("Ok. Device is on the bus");
 	case devstate::DEV_BUSY:
-		return std::string("A driver is connected to the device");
+		if(cfgst == confstate::empty)
+			return std::string("Unknown driver at address");
+		else // if(cfgst == confstate::conf)
+			return std::string("A driver is connected to the device");
 	case devstate::DEV_ERROR:
 		return std::string("Error while device scanning");
 	}
