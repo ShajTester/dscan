@@ -20,20 +20,24 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # define SPDLOG_LEVEL_OFF		6
 
 
-message("~${CMAKE_BUILD_TYPE}~")
 if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL ""))
-	# message("trace 2")
+	set(SPDLOG_ACTIVE_LEVEL 0)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=0)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_TRACE_ON=1)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_DEBUG_ON=1)
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+	set(SPDLOG_ACTIVE_LEVEL 4)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=4)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_TRACE_ON=0)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_DEBUG_ON=0)
 else((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL ""))
-	# message("trace 3")
+	set(SPDLOG_ACTIVE_LEVEL 1)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_ACTIVE_LEVEL=1)
-	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_TRACE_ON=1)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_TRACE_ON=0)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_DEBUG_ON=1)
 endif((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL ""))
 
-# message("trace 4")
+message("SPDLOG_ACTIVE_LEVEL " ${SPDLOG_ACTIVE_LEVEL})
 
 #include_directories($ENV{SINC})
 
