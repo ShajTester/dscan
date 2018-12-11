@@ -112,12 +112,41 @@ dscan -c /etc/dscan/dscan.conf --certain --text
 * `state` - код состояния устройства
 * `state_descr` - описание состояния устройства
 
+*Пример вывода в json*
+```json
+[
+    {
+        "bus": 3,
+        "addr": "0x10",
+        "name": "NoNameDevice",
+        "descr": "test device",
+        "state": 101,
+        "state_descr": "Warning! Device don't answer"
+    },
+    {
+        "bus": 3,
+        "addr": "0x52",
+        "name": "fru1",
+        "descr": "AT24C02",
+        "state": 103,
+        "state_descr": "A driver is connected to the device"
+    },
+    {
+        "bus": 3,
+        "addr": "0x68",
+        "name": "clkgen",
+        "descr": "",
+        "state": 103,
+        "state_descr": "A driver is connected to the device"
+    }
+]
+```
 
 ## Коды состояния
 
 | Код состояния узла | Описание состояния |  |
 |:------------------:|:-------------------|:-|
-| 0   | Не сканировалось |  |
+| 0   | Адрес не сканировалось |  |
 | 1   | Нет в конфигурации, не ответил на запросы |  |
 | 2   | Нет в конфигурации, ответил на запросы | Найдено новое устройство |
 | 3   | Неизвестный драйвер подключен к неизвестному устройству | Новое устройство с подключенным драйвером |
