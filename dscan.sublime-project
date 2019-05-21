@@ -3,6 +3,9 @@
 	[
 		{
 			"path": "."
+		},
+		{
+			"path": "/home/shaj/wrk/bmc/rik-master/rikor-aztec/build/tmp/sysroots/yosemite/usr/include/libfastjson"
 		}
 	]
 }

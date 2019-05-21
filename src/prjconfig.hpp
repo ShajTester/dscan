@@ -3,9 +3,8 @@
 
 #include <string>
 #include <memory>
-#include "rapidjson/rapidjson.h"
-#include "rapidjson/document.h"  
 
+#include <libfastjson/json.h>
 
 namespace rikor
 {

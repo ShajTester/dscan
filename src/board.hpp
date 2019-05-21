@@ -16,7 +16,8 @@ enum class ReportFormat
 {
 	rep_plain,
 	rep_json_indent,
-	rep_json_compact
+	rep_json_compact,
+	rep_json_web
 };
 
 enum class ScanType

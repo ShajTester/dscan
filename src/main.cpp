@@ -12,14 +12,11 @@
 
 #include "args.hxx"
 #include "version.h"
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
 
 #include "log.h"
 #include "prjconfig.hpp"
 #include "board.hpp"
 
-std::shared_ptr<spdlog::logger> my_logger;
 
 
 // Отсюда
@@ -27,7 +24,7 @@ std::shared_ptr<spdlog::logger> my_logger;
 inline bool is_file_exists(const std::string &name) 
 {
 	struct stat buffer;   
-	return (stat (name.c_str(), &buffer) == 0); 
+	return (stat(name.c_str(), &buffer) == 0); 
 }
 
 std::string GetCurrentWorkingDir(void) 
@@ -41,9 +38,7 @@ std::string GetCurrentWorkingDir(void)
 int main(int argc, char const *argv[])
 {
 
-	my_logger = spdlog::stdout_color_st("A");
-	my_logger->set_level(spdlog::level::trace);
-	// my_logger->trace(" -=- Start");
+    openlog("dscan", LOG_CONS, LOG_USER);
 
 	// Примеры разбора командной строки
 	// https://taywee.github.io/args/
@@ -55,6 +50,7 @@ int main(int argc, char const *argv[])
     args::Group jsongroup(parser, "This group is all exclusive:", args::Group::Validators::AtMostOne);
 	args::Flag json(jsongroup, "json", "json in human readable format", {"json"});
 	args::Flag json1(jsongroup, "json1", "json single line format", {"json1"});
+	args::Flag json2(jsongroup, "json2", "json single line format for WEB", {"json2"});
 	args::Flag outtext(jsongroup, "text", "plain text format (default)", {"text"});
     args::Group scangroup(parser, "This group is all exclusive:", args::Group::Validators::AtMostOne);
 	args::Flag fullscan(scangroup, "fullscan", "scan all devices in all busses", {"full"});
@@ -94,7 +90,7 @@ int main(int argc, char const *argv[])
 
 	if(conf)
 	{ // Загружаем конфигурацию из файла
-		SPDLOG_LOGGER_DEBUG(my_logger, "main   Config file name: {}", args::get(conf));
+		syslog(LOG_INFO, "main   Config file name: %s", args::get(conf));
 		configFileName = args::get(conf);
 		if(!is_file_exists(configFileName))
 		{
@@ -118,7 +114,8 @@ int main(int argc, char const *argv[])
 	}
 
 
-	SPDLOG_LOGGER_INFO(my_logger, "Config file name: {}", configFileName);
+	syslog(LOG_INFO, "Config file name: %s", configFileName);
+
 	auto config_doc = rikor::prjConfig::create(configFileName);
 	auto brd = rikor::board::create(config_doc);
 
@@ -126,6 +123,8 @@ int main(int argc, char const *argv[])
 		brd->set_format(rikor::ReportFormat::rep_json_indent);
 	else if(json1)
 		brd->set_format(rikor::ReportFormat::rep_json_compact);
+	else if(json2)
+		brd->set_format(rikor::ReportFormat::rep_json_web);
 	else
 		brd->set_format(rikor::ReportFormat::rep_plain);
 
@@ -140,7 +139,7 @@ int main(int argc, char const *argv[])
 	std::cout << "\n" << *brd << std::endl;
 
 	// Release and close all loggers
-	spdlog::drop_all();
+	closelog();
 	return 0;
 }
 
