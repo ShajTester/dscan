@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.88888888)
 
 project(dscan VERSION 0.1.1)
 
